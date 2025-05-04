@@ -7,8 +7,8 @@ from .database import Database
 
 class Bot(commands.Bot):
     COGS = [
-        # Essential
         "core",
+        "reminders",
     ]
 
     def __init__(self, database: Database):

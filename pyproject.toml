@@ -7,8 +7,19 @@ requires-python = ">=3.13"
 dependencies = [
     "asyncpg>=0.30.0",
     "asyncpg-stubs>=0.30.1",
+    "discord-ext-menus",
+    "discord-ext-menus-views",
     "discord-py>=2.5.2",
+    "parsedatetime>=2.6",
+    "python-dateutil>=2.9.0.post0",
 ]
+
+[tool.uv.sources]
+discord-ext-menus = { git = "https://github.com/Rapptz/discord-ext-menus" }
+discord-ext-menus-views = { git = "https://github.com/oliver-ni/discord-ext-menus-views" }
 
 [tool.ruff]
 line-length = 100
+
+[tool.ruff.lint.mccabe]
+max-complexity = 100
