@@ -10,6 +10,7 @@ dependencies = [
     "discord-ext-menus",
     "discord-ext-menus-views",
     "discord-py>=2.5.2",
+    "jishaku>=2.6.0",
     "parsedatetime>=2.6",
     "python-dateutil>=2.9.0.post0",
 ]

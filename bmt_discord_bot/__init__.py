@@ -25,6 +25,8 @@ class Bot(commands.Bot):
         self.logger = logging.getLogger(__name__)
 
     async def setup_hook(self):
+        await self.load_extension("jishaku")
+
         for cog in self.COGS:
             self.logger.info(f"Loading cog {cog}...")
             await self.load_extension(f"{__name__}.cogs.{cog}")
