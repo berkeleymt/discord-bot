@@ -1,19 +1,16 @@
+import logging
 import discord
 from discord.ext import commands
 
 from .database import Database
 
-COGS = [
-    # Essential
-    "core",
-    "help",
-    "database",
-    "reaction_roles",
-    "reminders",
-]
-
 
 class Bot(commands.Bot):
+    COGS = [
+        # Essential
+        "core",
+    ]
+
     def __init__(self, database: Database):
         allowed_mentions = discord.AllowedMentions(everyone=False, roles=False)
         intents = discord.Intents.default()
@@ -25,6 +22,9 @@ class Bot(commands.Bot):
         )
 
         self.database = database
+        self.logger = logging.getLogger(__name__)
 
     async def setup_hook(self):
-        pass
+        for cog in self.COGS:
+            self.logger.info(f"Loading cog {cog}...")
+            await self.load_extension(f"{__name__}.cogs.{cog}")
