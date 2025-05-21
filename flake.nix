@@ -13,7 +13,7 @@
     {
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
-          packages = [ pkgs.git pkgs.uv ];
+          packages = with pkgs; [ git uv texliveFull poppler-utils ];
         };
       });
 

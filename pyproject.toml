@@ -12,7 +12,11 @@ dependencies = [
     "discord-py>=2.5.2",
     "jishaku>=2.6.0",
     "parsedatetime>=2.6",
+    "pillow>=11.2.1",
+    "pylatex>=1.4.2",
+    "pymupdf>=1.25.5",
     "python-dateutil>=2.9.0.post0",
+    "typst>=0.13.2",
 ]
 
 [tool.uv.sources]

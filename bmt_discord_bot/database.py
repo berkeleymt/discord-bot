@@ -23,6 +23,7 @@ class Migration:
 class Database:
     MIGRATIONS = [
         Migration.from_files("0001_reminders"),
+        Migration.from_files("0002_math"),
     ]
 
     def __init__(self, pool: asyncpg.Pool):

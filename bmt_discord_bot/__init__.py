@@ -12,6 +12,7 @@ class Context(commands.Context["Bot"]):
 class Bot(commands.Bot):
     COGS = [
         "core",
+        "math",
         "reminders",
     ]
 
