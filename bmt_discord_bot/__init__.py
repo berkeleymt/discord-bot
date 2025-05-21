@@ -5,6 +5,10 @@ from discord.ext import commands
 from .database import Database
 
 
+class Context(commands.Context["Bot"]):
+    pass
+
+
 class Bot(commands.Bot):
     COGS = [
         "core",
@@ -30,3 +34,6 @@ class Bot(commands.Bot):
         for cog in self.COGS:
             self.logger.info(f"Loading cog {cog}...")
             await self.load_extension(f"{__name__}.cogs.{cog}")
+
+    def get_context(self, *args, **kwargs):
+        return super().get_context(cls=Context, *args, **kwargs)

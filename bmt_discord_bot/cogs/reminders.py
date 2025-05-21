@@ -6,9 +6,8 @@ from asyncpg import Record
 from discord.ext import commands
 from discord.ext.menus.views import ViewMenuPages
 
-from bmt_discord_bot import Bot
+from bmt_discord_bot import Bot, Context
 from bmt_discord_bot.lib import formats, time
-from bmt_discord_bot.lib.context import Context
 from bmt_discord_bot.lib.pagination import EmbedFieldsPageSource
 
 

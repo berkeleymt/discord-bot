@@ -11,7 +11,7 @@ def format_date(date):
     return f"{discord.utils.format_dt(date, 'F')} ({discord.utils.format_dt(date, 'R')})"
 
 
-class Bot(commands.Cog):
+class Core(commands.Cog):
     """For basic bot operation."""
 
     def __init__(self, bot):
@@ -93,4 +93,4 @@ class Bot(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(Bot(bot))
+    await bot.add_cog(Core(bot))

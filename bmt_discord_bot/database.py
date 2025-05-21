@@ -44,9 +44,7 @@ class Database:
             for migration in migrations:
                 needed_migration = next(needed_migrations)
                 if migration["name"] != needed_migration.name:
-                    raise ValueError(
-                        f"Unexpected migration in database: {migration['name']}"
-                    )
+                    raise ValueError(f"Unexpected migration in database: {migration['name']}")
 
             for needed_migration in needed_migrations:
                 self.logger.info(f"Applying {needed_migration.name}...")
