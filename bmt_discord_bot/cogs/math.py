@@ -9,6 +9,7 @@ import discord
 from discord.ext import commands
 from jishaku.functools import executor_function
 from pylatex import Document, NoEscape, Package
+import pylatex
 from PIL import Image, ImageOps
 import pymupdf
 from abc import ABC, abstractmethod
@@ -75,6 +76,8 @@ class LatexRenderer(MathRenderer):
         document.preamble.append(Package("amsmath"))
         try:
             document.generate_pdf(compiler="texfot", compiler_args=["--quiet", "pdflatex"])
+        except pylatex.errors.CompilerError as e:
+            raise CompileError(e)
         except subprocess.CalledProcessError as e:
             raise CompileError(e.output.decode())
 
@@ -92,7 +95,7 @@ class TypstRenderer(MathRenderer):
         try:
             typst.compile(source_bytes, output_path, format="pdf")
         except RuntimeError as e:
-            raise CompileError(str(e))
+            raise CompileError(e)
 
 
 class MathView(discord.ui.View):
