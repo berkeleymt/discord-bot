@@ -30,7 +30,7 @@ class Reminders(commands.Cog):
         ctx: Context,
         *,
         time_and_content: Annotated[
-            time.UserFriendlyTime.Result,
+            time.FriendlyTimeResult,
             time.UserFriendlyTime(commands.clean_content, default="\u2026"),
         ],
     ):
