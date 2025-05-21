@@ -8,4 +8,4 @@ WORKDIR /app
 COPY . .
 RUN uv sync --frozen
 ENTRYPOINT ["uv", "run"]
-CMD ["python", "-m", "contestdojo_verifier_bot"]
+CMD ["python", "-m", "bmt_discord_bot"]
