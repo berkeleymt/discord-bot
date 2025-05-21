@@ -5,7 +5,8 @@
 # Copyright (c) 2021 Rapptz
 
 import re
-from datetime import datetime, timedelta, timezone
+import zoneinfo
+from datetime import datetime, timedelta
 
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
@@ -13,6 +14,8 @@ from discord.ext import commands
 
 from .formats import format_dt as format_dt
 from .formats import human_join, plural
+
+DEFAULT_TIMEZONE = zoneinfo.ZoneInfo("America/Los_Angeles")
 
 # Monkey patch mins and secs into the units
 units = pdt.pdtLocales["en_US"].units
@@ -39,7 +42,7 @@ class ShortTime:
             raise commands.BadArgument("invalid time provided")
 
         data = {k: int(v) for k, v in match.groupdict(default=0).items()}
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(DEFAULT_TIMEZONE)
         self.dt = now + relativedelta(**data)
 
     @classmethod
@@ -51,13 +54,13 @@ class HumanTime:
     calendar = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE)
 
     def __init__(self, argument, *, now=None):
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(DEFAULT_TIMEZONE)
         if now.tzinfo is None:
-            now = now.replace(tzinfo=timezone.utc)
+            now = now.replace(tzinfo=DEFAULT_TIMEZONE)
 
         dt, status = self.calendar.parseDT(argument, sourceTime=now)
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=DEFAULT_TIMEZONE)
 
         if not status.hasDateOrTime:
             raise commands.BadArgument('invalid time provided, try e.g. "tomorrow" or "3 days"')
@@ -198,7 +201,7 @@ class UserFriendlyTime(commands.Converter):
             if status.accuracy == pdt.pdtContext.ACU_HALFDAY:
                 dt = dt.replace(day=now.day + 1)
 
-            result = self.Result(dt.replace(tzinfo=timezone.utc))
+            result = self.Result(dt.replace(tzinfo=DEFAULT_TIMEZONE))
 
             if begin in (0, 1):
                 if begin == 1:
@@ -224,16 +227,16 @@ class UserFriendlyTime(commands.Converter):
 
 
 def human_timedelta(dt, *, source=None, accuracy=3, brief=False, suffix=True):
-    now = source or datetime.now(timezone.utc)
+    now = source or datetime.now(DEFAULT_TIMEZONE)
 
     if isinstance(dt, timedelta):
         dt = now + dt
 
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=DEFAULT_TIMEZONE)
 
     if now.tzinfo is None:
-        now = now.replace(tzinfo=timezone.utc)
+        now = now.replace(tzinfo=DEFAULT_TIMEZONE)
 
     # Microsecond free zone
     now = now.replace(microsecond=0)
