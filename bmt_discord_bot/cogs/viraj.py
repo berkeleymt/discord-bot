@@ -23,7 +23,6 @@ class Viraj(commands.Cog):
             return
         if "proctor" in message.content.casefold():
             await message.channel.send("*invigilator")
-            return
         for match in PATTERN.finditer(message.content):
             await message.channel.send(self._correct_text(match))
 
