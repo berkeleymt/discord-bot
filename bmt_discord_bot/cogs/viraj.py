@@ -21,8 +21,6 @@ class Viraj(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
-        if "proctor" in message.content.casefold():
-            await message.channel.send("*invigilator")
         for match in PATTERN.finditer(message.content):
             await message.channel.send(self._correct_text(match))
 
