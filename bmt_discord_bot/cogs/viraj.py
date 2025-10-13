@@ -1,4 +1,5 @@
 import re
+import random
 from discord.ext import commands
 
 PATTERN = re.compile(
@@ -21,6 +22,8 @@ class Viraj(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
+        if "proctor" in message.content.casefold() and random.random() < 0.05: 
+            await message.channel.send("*invigilator")
         for match in PATTERN.finditer(message.content):
             await message.channel.send(self._correct_text(match))
 
