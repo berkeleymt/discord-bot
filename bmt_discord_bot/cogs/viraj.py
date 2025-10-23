@@ -13,6 +13,9 @@ class Viraj(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        
+    def cog_check(self, ctx):
+        return ctx.guild.id == 786701065856221205
 
     def _correct_text(self, match):
         prefix, suffix = match.groups()
