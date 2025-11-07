@@ -1,6 +1,5 @@
 import re
 import random
-import discord
 from discord.ext import commands
 
 PATTERN = re.compile(
@@ -26,24 +25,12 @@ class Viraj(commands.Cog):
         prefix, suffix = match.groups()
         return f"*{prefix}{suffix.replace('is', 'iz')}"
 
-    def _should_ignore_channel(self, channel):
-        """Check if a channel should be ignored based on its category."""
-        category_id = getattr(channel, "category_id", None)
-        if category_id in IGNORED_CATEGORY_IDS:
-            return True
-
-        parent = getattr(channel, "parent", None)
-        if parent and parent is not channel:
-            return self._should_ignore_channel(parent)
-
-        return False
-
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
             return
 
-        if self._should_ignore_channel(message.channel):
+        if getattr(message.channel, "category_id", None) in IGNORED_CATEGORY_IDS:
             return
 
         if "proctor" in message.content.casefold() and random.random() < 0.05:
