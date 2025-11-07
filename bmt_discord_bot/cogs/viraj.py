@@ -28,12 +28,14 @@ class Viraj(commands.Cog):
 
     def _should_ignore_channel(self, channel):
         """Check if a channel should be ignored based on its category."""
-        if isinstance(channel, discord.Thread):
-            parent_channel = channel.parent
-            if parent_channel and hasattr(parent_channel, "category_id"):
-                return parent_channel.category_id in IGNORED_CATEGORY_IDS
-        elif hasattr(channel, "category_id"):
-            return channel.category_id in IGNORED_CATEGORY_IDS
+        category_id = getattr(channel, "category_id", None)
+        if category_id in IGNORED_CATEGORY_IDS:
+            return True
+
+        parent = getattr(channel, "parent", None)
+        if parent and parent is not channel:
+            return self._should_ignore_channel(parent)
+
         return False
 
     @commands.Cog.listener()
