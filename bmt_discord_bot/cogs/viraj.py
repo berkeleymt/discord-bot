@@ -6,6 +6,7 @@ PATTERN = re.compile(
     r"\b(\w*)(ise|isation|isations|ising|ised|ises|iser|isers)\b",
     re.IGNORECASE,
 )
+IGNORED_CATEGORY_IDS = [1031955833371758754]
 
 
 class Viraj(commands.Cog):
@@ -13,7 +14,7 @@ class Viraj(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        
+
     def cog_check(self, ctx):
         return ctx.guild.id == 786701065856221205
 
@@ -25,7 +26,9 @@ class Viraj(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
-        if "proctor" in message.content.casefold() and random.random() < 0.05: 
+        if message.channel.category_id in IGNORED_CATEGORY_IDS:
+            return
+        if "proctor" in message.content.casefold() and random.random() < 0.05:
             await message.channel.send("*invigilator")
         for match in PATTERN.finditer(message.content):
             await message.channel.send(self._correct_text(match))
