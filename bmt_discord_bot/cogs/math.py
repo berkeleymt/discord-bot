@@ -82,6 +82,28 @@ class LatexRenderer(MathRenderer):
             raise CompileError(e.output.decode())
 
 
+class TikzRenderer(MathRenderer):
+    name = "TikZ"
+    key = "tikz"
+    aliases = []
+
+    def compile_source(self, output_path: Path, source: str):
+        document = Document(
+            default_filepath=str(output_path).removesuffix(".pdf"),
+            documentclass="standalone",
+            document_options="border=8pt",
+        )
+        document.preamble.append(Package("tikz"))
+        document.preamble.append(Package("amsmath"))
+        document.append(NoEscape(source))
+        try:
+            document.generate_pdf(compiler="texfot", compiler_args=["--quiet", "pdflatex"])
+        except pylatex.errors.CompilerError as e:
+            raise CompileError(e)
+        except subprocess.CalledProcessError as e:
+            raise CompileError(e.output.decode())
+
+
 class TypstRenderer(MathRenderer):
     name = "Typst"
     key = "typst"
@@ -196,8 +218,9 @@ class Math(commands.Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
         tex = LatexRenderer()
+        tikz = TikzRenderer()
         typst = TypstRenderer()
-        self.renderers = [tex, typst]
+        self.renderers = [tex, tikz, typst]
         self.renderer_by_key = {r.key: r for r in self.renderers}
         self.renderer_by_key |= {alias: r for r in self.renderers for alias in r.aliases}
 
@@ -229,6 +252,11 @@ class Math(commands.Cog):
     async def tex(self, ctx, file: Optional[discord.Attachment], *, source: str | None = None):
         """Render TeX to an image."""
         await self.process_math_command(ctx, self.renderer_by_key["tex"], file, source)
+
+    @commands.command()
+    async def tikz(self, ctx, file: Optional[discord.Attachment], *, source: str | None = None):
+        """Render TikZ to an image."""
+        await self.process_math_command(ctx, self.renderer_by_key["tikz"], file, source)
 
     @commands.command()
     async def typst(self, ctx, file: Optional[discord.Attachment], *, source: str | None = None):
