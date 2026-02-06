@@ -286,7 +286,17 @@ class Math(commands.Cog):
             assert ctx.command is not None
             raise commands.MissingRequiredArgument(ctx.command.clean_params["source"])
 
+    @staticmethod
+    def strip_code_block(source: str) -> str:
+        source = source.strip()
+        if match := re.fullmatch(r"```(?:\w*\n)?(.*?)```", source, re.DOTALL):
+            return match.group(1).strip()
+        if match := re.fullmatch(r"`(.*?)`", source, re.DOTALL):
+            return match.group(1).strip()
+        return source
+
     async def process_math(self, ctx: Context, renderer: MathRenderer, source: str):
+        source = self.strip_code_block(source)
         async with ctx.typing():
             view = MathView(ctx, source, renderer, self.renderers)
             await view.send(ctx.channel)
