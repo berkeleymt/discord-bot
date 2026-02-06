@@ -223,15 +223,27 @@ class Math(commands.Cog):
         except KeyError:
             return self.renderer_by_key[DEFAULT_DEFAULT_RENDERER]
 
+    CODE_BLOCK_RE = re.compile(r"```(\w+)\n(.*?)```", re.DOTALL)
+
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.bot or re.search(r"\$.+\$", message.content) is None:
+        if message.author.bot:
             return
         ctx = await self.bot.get_context(message)
         if ctx.command is not None:
             return
-        renderer = await self.get_default_renderer(message)
-        await self.process_math(ctx, renderer, message.clean_content)
+
+        if match := self.CODE_BLOCK_RE.search(message.content):
+            lang = match.group(1).lower()
+            if lang in self.renderer_by_key:
+                renderer = self.renderer_by_key[lang]
+                source = match.group(2).strip()
+                await self.process_math(ctx, renderer, source)
+                return
+
+        if re.search(r"\$.+\$", message.content) is not None:
+            renderer = await self.get_default_renderer(message)
+            await self.process_math(ctx, renderer, message.clean_content)
 
     @commands.command(aliases=("latex",))
     async def tex(self, ctx, file: Optional[discord.Attachment], *, source: str | None = None):
