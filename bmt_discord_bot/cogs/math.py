@@ -74,7 +74,14 @@ class LatexRenderer(MathRenderer):
         )
         document.append(NoEscape(source))
         document.preamble.append(Package("amsmath"))
+        document.preamble.append(Package("amssymb"))
+        document.preamble.append(Package("amsthm"))
+        document.preamble.append(Package("enumerate"))
         document.preamble.append(Package("tikz"))
+        document.preamble.append(NoEscape(r"\usetikzlibrary{calc}"))
+        document.preamble.append(Package("tikz-cd"))
+        document.preamble.append(Package("arcs"))
+        document.preamble.append(Package("physics"))
         try:
             document.generate_pdf(compiler="texfot", compiler_args=["--quiet", "pdflatex"])
         except pylatex.errors.CompilerError as e:
