@@ -24,6 +24,18 @@ RENDER_DPI = 600
 MIN_IMAGE_WIDTH = 1500
 
 
+CODE_BLOCK_RE = re.compile(r"```(\w+)\n(.*?)```", re.DOTALL)
+
+
+def strip_code_block(source: str) -> str:
+    source = source.strip()
+    if match := CODE_BLOCK_RE.fullmatch(source):
+        return match.group(2).strip()
+    if match := re.fullmatch(r"`(.*?)`", source, re.DOTALL):
+        return match.group(1).strip()
+    return source
+
+
 class CompileError(Exception):
     pass
 
@@ -217,13 +229,23 @@ class Math(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.bot or re.search(r"\$.+\$", message.content) is None:
+        if message.author.bot:
             return
         ctx = await self.bot.get_context(message)
         if ctx.command is not None:
             return
-        renderer = await self.get_default_renderer(message)
-        await self.process_math(ctx, renderer, message.clean_content)
+
+        if match := CODE_BLOCK_RE.search(message.content):
+            lang = match.group(1).lower()
+            if lang in self.renderer_by_key:
+                renderer = self.renderer_by_key[lang]
+                source = match.group(2).strip()
+                await self.process_math(ctx, renderer, source)
+                return
+
+        if re.search(r"\$.+\$", message.content) is not None:
+            renderer = await self.get_default_renderer(message)
+            await self.process_math(ctx, renderer, message.clean_content)
 
     @commands.command(aliases=("latex",))
     async def tex(self, ctx, file: Optional[discord.Attachment], *, source: str | None = None):
@@ -286,17 +308,8 @@ class Math(commands.Cog):
             assert ctx.command is not None
             raise commands.MissingRequiredArgument(ctx.command.clean_params["source"])
 
-    @staticmethod
-    def strip_code_block(source: str) -> str:
-        source = source.strip()
-        if match := re.fullmatch(r"```(?:\w*\n)?(.*?)```", source, re.DOTALL):
-            return match.group(1).strip()
-        if match := re.fullmatch(r"`(.*?)`", source, re.DOTALL):
-            return match.group(1).strip()
-        return source
-
     async def process_math(self, ctx: Context, renderer: MathRenderer, source: str):
-        source = self.strip_code_block(source)
+        source = strip_code_block(source)
         async with ctx.typing():
             view = MathView(ctx, source, renderer, self.renderers)
             await view.send(ctx.channel)
