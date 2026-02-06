@@ -15,6 +15,7 @@ class Bot(commands.Bot):
         "math",
         "reminders",
         "viraj",
+        "welcome",
     ]
 
     def __init__(self, database: Database):
