@@ -14,12 +14,14 @@ class Bot(commands.Bot):
         "core",
         "math",
         "reminders",
+        "verified",
         "viraj",
     ]
 
     def __init__(self, database: Database):
         allowed_mentions = discord.AllowedMentions(everyone=False, roles=False)
         intents = discord.Intents.default()
+        intents.members = True
         intents.message_content = True
         super().__init__(
             allowed_mentions=allowed_mentions,
