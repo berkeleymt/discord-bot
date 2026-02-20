@@ -10,7 +10,7 @@ from bmt_discord_bot.lib import formats
 Target = discord.TextChannel | discord.CategoryChannel
 
 
-class Threads(commands.Cog):
+class AutoJoinThreads(commands.Cog):
     """Auto-subscribe to new threads in channels."""
 
     def __init__(self, bot: Bot):
@@ -230,4 +230,4 @@ class Threads(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(Threads(bot))
+    await bot.add_cog(AutoJoinThreads(bot))

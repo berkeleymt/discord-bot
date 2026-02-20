@@ -14,7 +14,7 @@ class Bot(commands.Bot):
         "core",
         "math",
         "reminders",
-        "threads",
+        "auto_join_threads",
         "viraj",
     ]
 
