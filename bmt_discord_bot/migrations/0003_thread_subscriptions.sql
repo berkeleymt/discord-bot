@@ -1,4 +1,4 @@
-CREATE TYPE subscription_scope AS ENUM ('server', 'category', 'channel');
+CREATE TYPE subscription_scope AS ENUM ('guild', 'category', 'channel');
 
 CREATE TABLE thread_subscriptions (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,

@@ -20,7 +20,7 @@ class Threads(commands.Cog):
     @staticmethod
     def _resolve_target(guild: discord.Guild, target: Target | None) -> tuple[str, int, str]:
         if target is None:
-            return "server", guild.id, "this server"
+            return "guild", guild.id, "this server"
         elif isinstance(target, discord.CategoryChannel):
             return "category", target.id, f"category **{target.name}**"
         else:
@@ -38,7 +38,7 @@ class Threads(commands.Cog):
                 WHERE user_id = $1 AND guild_id = $2
                 ORDER BY
                     CASE scope_type
-                        WHEN 'server' THEN 0
+                        WHEN 'guild' THEN 0
                         WHEN 'category' THEN 1
                         WHEN 'channel' THEN 2
                     END,
@@ -56,7 +56,7 @@ class Threads(commands.Cog):
             prefix = "\N{HEAVY CHECK MARK}" if not sub["excluded"] else "\N{HEAVY MULTIPLICATION X}"
             scope_type = sub["scope_type"]
             scope_id = sub["scope_id"]
-            if scope_type == "server":
+            if scope_type == "guild":
                 label = "Entire server"
             elif scope_type == "category":
                 category = ctx.guild.get_channel(scope_id)
@@ -80,7 +80,7 @@ class Threads(commands.Cog):
     @threads.command()
     @commands.guild_only()
     async def subscribe(self, ctx: Context, *, target: Target | None = None):
-        """Subscribe to new threads. Pass a channel or category, or nothing for the whole server."""
+        """Subscribe to new threads. Pass a channel or category, or nothing for the whole guild."""
 
         scope_type, scope_id, label = self._resolve_target(ctx.guild, target)
 
@@ -116,7 +116,7 @@ class Threads(commands.Cog):
     @threads.command()
     @commands.guild_only()
     async def unsubscribe(self, ctx: Context, *, target: Target | None = None):
-        """Unsubscribe from threads. Pass a channel or category, or nothing for the whole server."""
+        """Unsubscribe from threads. Pass a channel or category, or nothing for the whole guild."""
 
         scope_type, scope_id, label = self._resolve_target(ctx.guild, target)
 
@@ -154,7 +154,7 @@ class Threads(commands.Cog):
                     SELECT 1 FROM thread_subscriptions
                     WHERE user_id = $1 AND guild_id = $2 AND excluded = FALSE
                     AND (
-                        (scope_type = 'server')
+                        (scope_type = 'guild')
                         OR (scope_type = 'category' AND $3 = 'channel')
                     )
                 )
@@ -202,7 +202,7 @@ class Threads(commands.Cog):
                             ORDER BY CASE scope_type
                                 WHEN 'channel' THEN 0
                                 WHEN 'category' THEN 1
-                                WHEN 'server' THEN 2
+                                WHEN 'guild' THEN 2
                             END
                         ) AS rn
                     FROM thread_subscriptions
@@ -210,7 +210,7 @@ class Threads(commands.Cog):
                         AND (
                             (scope_type = 'channel' AND scope_id = $2)
                             OR (scope_type = 'category' AND scope_id = $3)
-                            OR (scope_type = 'server' AND scope_id = $1)
+                            OR (scope_type = 'guild' AND scope_id = $1)
                         )
                 ) ranked
                 WHERE rn = 1 AND excluded = FALSE
