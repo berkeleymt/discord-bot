@@ -84,7 +84,22 @@ class Threads(commands.Cog):
 
         scope_type, scope_id, label = self._resolve_target(ctx.guild, target)
 
-        result = await ctx.bot.database.pool.execute(
+        existing = await ctx.bot.database.pool.fetchrow(
+            """
+                SELECT excluded
+                FROM thread_subscriptions
+                WHERE user_id = $1 AND scope_type = $2 AND scope_id = $3
+            """,
+            ctx.author.id,
+            scope_type,
+            scope_id,
+        )
+
+        if existing is not None and not existing["excluded"]:
+            await ctx.send(f"You're already subscribed to threads in {label}.")
+            return
+
+        await ctx.bot.database.pool.execute(
             """
                 INSERT INTO thread_subscriptions (user_id, guild_id, scope_type, scope_id, excluded)
                 VALUES ($1, $2, $3, $4, FALSE)
@@ -96,11 +111,7 @@ class Threads(commands.Cog):
             scope_type,
             scope_id,
         )
-
-        if result == "INSERT 0 1":
-            await ctx.send(f"You were already subscribed to {label}.")
-        else:
-            await ctx.send(f"Subscribed to threads in {label}.")
+        await ctx.send(f"Subscribed to threads in {label}.")
 
     @threads.command()
     @commands.guild_only()
