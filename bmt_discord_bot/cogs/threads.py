@@ -181,36 +181,30 @@ class Threads(commands.Cog):
 
         category_id = thread.parent.category_id
 
-        scope_ids = [thread.parent.id]
-        scope_types = ["channel"]
-        if category_id is not None:
-            scope_ids.append(category_id)
-            scope_types.append("category")
-        scope_ids.append(thread.guild.id)
-        scope_types.append("server")
-
         subscribers = await self.bot.database.pool.fetch(
             """
-                SELECT DISTINCT ts.user_id
-                FROM thread_subscriptions ts
-                WHERE ts.guild_id = $1
-                    AND ts.excluded = FALSE
-                    AND ts.scope_type = ANY($2::subscription_scope[])
-                    AND ts.scope_id = ANY($3::bigint[])
-                    AND NOT EXISTS (
-                        SELECT 1 FROM thread_subscriptions ex
-                        WHERE ex.user_id = ts.user_id
-                            AND ex.guild_id = $1
-                            AND ex.excluded = TRUE
-                            AND (
-                                (ex.scope_type = 'channel' AND ex.scope_id = $4)
-                                OR (ex.scope_type = 'category' AND ex.scope_id = $5)
-                            )
-                    )
+                SELECT user_id
+                FROM (
+                    SELECT user_id, excluded,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY user_id
+                            ORDER BY CASE scope_type
+                                WHEN 'channel' THEN 0
+                                WHEN 'category' THEN 1
+                                WHEN 'server' THEN 2
+                            END
+                        ) AS rn
+                    FROM thread_subscriptions
+                    WHERE guild_id = $1
+                        AND (
+                            (scope_type = 'channel' AND scope_id = $2)
+                            OR (scope_type = 'category' AND scope_id = $3)
+                            OR (scope_type = 'server' AND scope_id = $1)
+                        )
+                ) ranked
+                WHERE rn = 1 AND excluded = FALSE
             """,
             thread.guild.id,
-            scope_types,
-            scope_ids,
             thread.parent.id,
             category_id or 0,
         )
