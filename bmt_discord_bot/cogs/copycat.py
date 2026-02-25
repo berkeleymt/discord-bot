@@ -10,23 +10,23 @@ class Copycat(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.threshold = DEFAULT_THRESHOLD
-        self.history: dict[int, tuple[str, int]] = defaultdict(lambda: ("", 0))
+        self.history: dict[int, tuple[str, set[int]]] = defaultdict(lambda: ("", set()))
 
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
             return
         channel_id = message.channel.id
-        last_content, count = self.history[channel_id]
+        last_content, users = self.history[channel_id]
         if message.content == last_content:
-            count += 1
+            users.add(message.author.id)
         else:
             last_content = message.content
-            count = 1
-        self.history[channel_id] = (last_content, count)
-        if count == self.threshold:
+            users = {message.author.id}
+        self.history[channel_id] = (last_content, users)
+        if len(users) >= self.threshold:
             await message.channel.send(last_content)
-            self.history[channel_id] = ("", 0)
+            self.history[channel_id] = ("", set())
 
     @commands.hybrid_command()
     @commands.has_permissions(manage_guild=True)
