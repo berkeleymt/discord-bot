@@ -91,7 +91,7 @@ class LatexRenderer(MathRenderer):
         document.preamble.append(Package("enumerate"))
         document.preamble.append(Package("tikz"))
         document.preamble.append(NoEscape(r"\usetikzlibrary{calc}"))
-        document.preamble.append(Package("tikz-cd"))
+        document.preamble.append(Package(NoEscape("tikz-cd")))
         document.preamble.append(Package("arcs"))
         document.preamble.append(Package("physics"))
         try:
