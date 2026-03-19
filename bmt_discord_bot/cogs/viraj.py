@@ -26,6 +26,8 @@ class Viraj(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
+        if message.guild is None:
+            return
         if message.channel.category_id in IGNORED_CATEGORY_IDS:
             return
         if "proctor" in message.content.casefold() and random.random() < 0.05:
