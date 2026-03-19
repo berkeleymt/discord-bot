@@ -26,7 +26,7 @@ class Viraj(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
-        if message.channel.category_id in IGNORED_CATEGORY_IDS:
+        if getattr(message.channel, "category_id", None) in IGNORED_CATEGORY_IDS:
             return
         if "proctor" in message.content.casefold() and random.random() < 0.05:
             await message.channel.send("*invigilator")
