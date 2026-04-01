@@ -3,7 +3,7 @@ import random
 from discord.ext import commands
 
 PATTERN = re.compile(
-    r"\b(\w*)(ise|isation|isations|ising|ised|ises|iser|isers)\b",
+    r"\b(\w*)(ize|ization|izations|izing|ized|izes|izer|izers)\b",
     re.IGNORECASE,
 )
 IGNORED_CATEGORY_IDS = [1031955833371758754]
@@ -20,7 +20,7 @@ class Viraj(commands.Cog):
 
     def _correct_text(self, match):
         prefix, suffix = match.groups()
-        return f"*{prefix}{suffix.replace('is', 'iz')}"
+        return f"*{prefix}{suffix.replace('iz', 'is')}"
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -30,8 +30,8 @@ class Viraj(commands.Cog):
             return
         if message.channel.category_id in IGNORED_CATEGORY_IDS:
             return
-        if "proctor" in message.content.casefold() and random.random() < 0.05:
-            await message.channel.send("*invigilator")
+        if "invigilator" in message.content.casefold() and random.random() < 0.05:
+            await message.channel.send("*proctor")
         for match in PATTERN.finditer(message.content):
             await message.channel.send(self._correct_text(match))
 
