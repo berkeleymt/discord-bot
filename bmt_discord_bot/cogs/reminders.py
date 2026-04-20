@@ -173,10 +173,13 @@ class Reminders(commands.Cog):
             text = f"<@{reminder['user_id']}> {text}"
             reference = None
 
+        user_ids = {u for u in reminder["mention_user_ids"]}
+        user_ids.add(reminder["user_id"])
+
         allowed_mentions = discord.AllowedMentions(
             everyone=reminder["mention_everyone"],
             roles=[discord.Object(id=r) for r in reminder["mention_role_ids"]],
-            users=[discord.Object(id=u) for u in reminder["mention_user_ids"]],
+            users=[discord.Object(id=u) for u in user_ids],
             replied_user=True,
         )
 
