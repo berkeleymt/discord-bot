@@ -31,7 +31,7 @@ class Reminders(commands.Cog):
         *,
         time_and_content: Annotated[
             time.FriendlyTimeResult,
-            time.UserFriendlyTime(commands.clean_content, default="\u2026"),
+            time.UserFriendlyTime(default="\u2026"),
         ],
     ):
         """Sets a reminder for a date or duration of time, e.g.:
@@ -43,11 +43,14 @@ class Reminders(commands.Cog):
         Times are parsed as US Pacific Time.
         """
 
+        allow_everyone = ctx.message.mention_everyone
+        allow_roles = len(ctx.message.role_mentions) > 0
+
         reminder = await ctx.bot.database.pool.fetchrow(
             """
-                INSERT INTO reminders (user_id, event, guild_id, channel_id, message_id, created_at, expires_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
-                RETURNING id, user_id, event, channel_id, message_id, created_at, expires_at
+                INSERT INTO reminders (user_id, event, guild_id, channel_id, message_id, created_at, expires_at, allow_everyone, allow_roles)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING id, user_id, event, channel_id, message_id, created_at, expires_at, allow_everyone, allow_roles
             """,
             ctx.author.id,
             time_and_content.arg,
@@ -56,6 +59,8 @@ class Reminders(commands.Cog):
             ctx.message.id,
             ctx.message.created_at,
             time_and_content.dt,
+            allow_everyone,
+            allow_roles,
         )
         self.bot.loop.create_task(self.update_current(reminder))
         await ctx.send(
@@ -115,7 +120,7 @@ class Reminders(commands.Cog):
     async def get_next_reminder(self):
         return await self.bot.database.pool.fetchrow(
             """
-            SELECT id, user_id, event, channel_id, message_id, created_at, expires_at
+            SELECT id, user_id, event, channel_id, message_id, created_at, expires_at, allow_everyone, allow_roles
             FROM reminders
             WHERE NOT is_resolved
             ORDER BY expires_at
@@ -165,13 +170,19 @@ class Reminders(commands.Cog):
             text = f"<@{reminder['user_id']}> {text}"
             reference = None
 
+        allowed_mentions = discord.AllowedMentions(
+            everyone=reminder["allow_everyone"],
+            roles=reminder["allow_roles"],
+            users=True,
+            replied_user=True,
+        )
+
         try:
-            mention = discord.AllowedMentions(users=True, replied_user=True)
-            await channel.send(text, reference=reference, allowed_mentions=mention)
+            await channel.send(text, reference=reference, allowed_mentions=allowed_mentions)
         except (discord.NotFound, discord.Forbidden):
             return await self.bot.database.pool.execute(
                 "UPDATE reminders SET is_failed = True WHERE id = $1",
-                reminder.id,
+                reminder["id"],
             )
 
         self.bot.loop.create_task(self.update_current())
