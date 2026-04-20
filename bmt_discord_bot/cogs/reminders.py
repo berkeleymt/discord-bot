@@ -45,13 +45,12 @@ class Reminders(commands.Cog):
 
         mention_everyone = ctx.message.mention_everyone
         mention_role_ids = [r.id for r in ctx.message.role_mentions]
-        mention_user_ids = [u.id for u in ctx.message.mentions]
 
         reminder = await ctx.bot.database.pool.fetchrow(
             """
-                INSERT INTO reminders (user_id, event, guild_id, channel_id, message_id, created_at, expires_at, mention_everyone, mention_role_ids, mention_user_ids)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-                RETURNING id, user_id, event, channel_id, message_id, created_at, expires_at, mention_everyone, mention_role_ids, mention_user_ids
+                INSERT INTO reminders (user_id, event, guild_id, channel_id, message_id, created_at, expires_at, mention_everyone, mention_role_ids)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING id, user_id, event, channel_id, message_id, created_at, expires_at, mention_everyone, mention_role_ids
             """,
             ctx.author.id,
             time_and_content.arg,
@@ -62,7 +61,6 @@ class Reminders(commands.Cog):
             time_and_content.dt,
             mention_everyone,
             mention_role_ids,
-            mention_user_ids,
         )
         self.bot.loop.create_task(self.update_current(reminder))
         await ctx.send(
@@ -123,7 +121,7 @@ class Reminders(commands.Cog):
     async def get_next_reminder(self):
         return await self.bot.database.pool.fetchrow(
             """
-            SELECT id, user_id, event, channel_id, message_id, created_at, expires_at, mention_everyone, mention_role_ids, mention_user_ids
+            SELECT id, user_id, event, channel_id, message_id, created_at, expires_at, mention_everyone, mention_role_ids
             FROM reminders
             WHERE NOT is_resolved
             ORDER BY expires_at
@@ -173,13 +171,10 @@ class Reminders(commands.Cog):
             text = f"<@{reminder['user_id']}> {text}"
             reference = None
 
-        user_ids = {u for u in reminder["mention_user_ids"]}
-        user_ids.add(reminder["user_id"])
-
         allowed_mentions = discord.AllowedMentions(
             everyone=reminder["mention_everyone"],
             roles=[discord.Object(id=r) for r in reminder["mention_role_ids"]],
-            users=[discord.Object(id=u) for u in user_ids],
+            users=True,
             replied_user=True,
         )
 
