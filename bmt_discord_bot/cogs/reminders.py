@@ -31,7 +31,7 @@ class Reminders(commands.Cog):
         *,
         time_and_content: Annotated[
             time.FriendlyTimeResult,
-            time.UserFriendlyTime(commands.clean_content, default="\u2026"),
+            time.UserFriendlyTime(default="\u2026"),
         ],
     ):
         """Sets a reminder for a date or duration of time, e.g.:
@@ -43,11 +43,14 @@ class Reminders(commands.Cog):
         Times are parsed as US Pacific Time.
         """
 
+        mention_everyone = ctx.message.mention_everyone
+        mention_role_ids = [r.id for r in ctx.message.role_mentions]
+
         reminder = await ctx.bot.database.pool.fetchrow(
             """
-                INSERT INTO reminders (user_id, event, guild_id, channel_id, message_id, created_at, expires_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
-                RETURNING id, user_id, event, channel_id, message_id, created_at, expires_at
+                INSERT INTO reminders (user_id, event, guild_id, channel_id, message_id, created_at, expires_at, mention_everyone, mention_role_ids)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING id, user_id, event, channel_id, message_id, created_at, expires_at, mention_everyone, mention_role_ids
             """,
             ctx.author.id,
             time_and_content.arg,
@@ -56,10 +59,13 @@ class Reminders(commands.Cog):
             ctx.message.id,
             ctx.message.created_at,
             time_and_content.dt,
+            mention_everyone,
+            mention_role_ids,
         )
         self.bot.loop.create_task(self.update_current(reminder))
         await ctx.send(
-            f"Alright, I'll remind you in **{time.human_timedelta(time_and_content.dt, source=ctx.message.created_at)}**: {time_and_content.arg}"
+            f"Alright, I'll remind you in **{time.human_timedelta(time_and_content.dt, source=ctx.message.created_at)}**: {time_and_content.arg}",
+            allowed_mentions=discord.AllowedMentions.none(),
         )
 
     @reminder.command()
@@ -115,7 +121,7 @@ class Reminders(commands.Cog):
     async def get_next_reminder(self):
         return await self.bot.database.pool.fetchrow(
             """
-            SELECT id, user_id, event, channel_id, message_id, created_at, expires_at
+            SELECT id, user_id, event, channel_id, message_id, created_at, expires_at, mention_everyone, mention_role_ids
             FROM reminders
             WHERE NOT is_resolved
             ORDER BY expires_at
@@ -165,12 +171,19 @@ class Reminders(commands.Cog):
             text = f"<@{reminder['user_id']}> {text}"
             reference = None
 
+        allowed_mentions = discord.AllowedMentions(
+            everyone=reminder["mention_everyone"],
+            roles=[discord.Object(id=r) for r in reminder["mention_role_ids"]],
+            users=True,
+            replied_user=True,
+        )
+
         try:
-            await channel.send(text, reference=reference)
+            await channel.send(text, reference=reference, allowed_mentions=allowed_mentions)
         except (discord.NotFound, discord.Forbidden):
             return await self.bot.database.pool.execute(
                 "UPDATE reminders SET is_failed = True WHERE id = $1",
-                reminder.id,
+                reminder["id"],
             )
 
         self.bot.loop.create_task(self.update_current())

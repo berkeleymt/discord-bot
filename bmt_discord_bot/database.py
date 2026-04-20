@@ -25,6 +25,7 @@ class Database:
         Migration.from_files("0001_reminders"),
         Migration.from_files("0002_math"),
         Migration.from_files("0003_copycat"),
+        Migration.from_files("0004_reminder_allowed_mentions"),
     ]
 
     def __init__(self, pool: asyncpg.Pool):
