@@ -166,7 +166,8 @@ class Reminders(commands.Cog):
             reference = None
 
         try:
-            await channel.send(text, reference=reference)
+            mention = discord.AllowedMentions(users=True, replied_user=True)
+            await channel.send(text, reference=reference, allowed_mentions=mention)
         except (discord.NotFound, discord.Forbidden):
             return await self.bot.database.pool.execute(
                 "UPDATE reminders SET is_failed = True WHERE id = $1",
