@@ -322,7 +322,7 @@ class Math(commands.Cog):
 
     async def process_math(self, ctx: Context, renderer: MathRenderer, source: str):
         source = strip_code_block(source)
-        text_outside_code = CODE_SPAN_RE.sub("", ctx.message.content)
+        text_outside_code = CODE_SPAN_RE.sub(" ", ctx.message.content)
         spoiler = SPOILER_RE.search(text_outside_code) is not None
         async with ctx.typing():
             view = MathView(ctx, source, renderer, self.renderers, spoiler=spoiler)
