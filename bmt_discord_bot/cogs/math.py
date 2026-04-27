@@ -25,6 +25,7 @@ MIN_IMAGE_WIDTH = 1500
 
 
 CODE_BLOCK_RE = re.compile(r"```(\w+)\n(.*?)```", re.DOTALL)
+SPOILER_RE = re.compile(r"\|\|.+?\|\|", re.DOTALL)
 
 
 def strip_code_block(source: str) -> str:
@@ -150,12 +151,14 @@ class MathView(discord.ui.View):
         source: str,
         default_renderer: MathRenderer,
         renderers: list[MathRenderer],
+        spoiler: bool = False,
     ):
         super().__init__()
         self.ctx = ctx
         self.source = source
         self.default_renderer = default_renderer
         self.renderers = renderers
+        self.spoiler = spoiler
         self.select_renderer = self.RendererSelect(default_renderer, renderers)
 
     async def render(self, renderer: MathRenderer):
@@ -163,7 +166,7 @@ class MathView(discord.ui.View):
         self.remove_item(self.select_renderer)
         try:
             bufs = await renderer.render(self.source)
-            self.files = [discord.File(buf, filename=f"math_{i}.png") for i, buf in enumerate(bufs)]
+            self.files = [discord.File(buf, filename=f"math_{i}.png", spoiler=self.spoiler) for i, buf in enumerate(bufs)]
             self.content = None
         except CompileError as e:
             error = str(e)
@@ -318,8 +321,9 @@ class Math(commands.Cog):
 
     async def process_math(self, ctx: Context, renderer: MathRenderer, source: str):
         source = strip_code_block(source)
+        spoiler = SPOILER_RE.search(ctx.message.content) is not None
         async with ctx.typing():
-            view = MathView(ctx, source, renderer, self.renderers)
+            view = MathView(ctx, source, renderer, self.renderers, spoiler=spoiler)
             await view.send(ctx.channel)
 
 
