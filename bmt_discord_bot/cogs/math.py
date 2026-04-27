@@ -26,6 +26,7 @@ MIN_IMAGE_WIDTH = 1500
 
 CODE_BLOCK_RE = re.compile(r"```(\w+)\n(.*?)```", re.DOTALL)
 SPOILER_RE = re.compile(r"\|\|.+?\|\|", re.DOTALL)
+CODE_SPAN_RE = re.compile(r"```.*?```|`[^`]+`", re.DOTALL)
 
 
 def strip_code_block(source: str) -> str:
@@ -321,7 +322,8 @@ class Math(commands.Cog):
 
     async def process_math(self, ctx: Context, renderer: MathRenderer, source: str):
         source = strip_code_block(source)
-        spoiler = SPOILER_RE.search(ctx.message.content) is not None
+        text_outside_code = CODE_SPAN_RE.sub("", ctx.message.content)
+        spoiler = SPOILER_RE.search(text_outside_code) is not None
         async with ctx.typing():
             view = MathView(ctx, source, renderer, self.renderers, spoiler=spoiler)
             await view.send(ctx.channel)
